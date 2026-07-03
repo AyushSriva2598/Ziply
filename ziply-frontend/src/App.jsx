@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 const GITHUB_REPO = "https://github.com/AyushSriva2598/Ziply";
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const CONTAINER_MAX = 1200;
 const CONTAINER_PAD = "clamp(24px, 5vw, 64px)";

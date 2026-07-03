@@ -1,0 +1,9 @@
+django
+djangorestframework
+django-redis
+psycopg2-binary
+celery
+django-cors-headers
+gunicorn
+django-debug-toolbar
+dj-database-url

@@ -13,21 +13,26 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from shortner.snowflake import SnowflakeGenerator
+import environ
+import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%udg&6ja(l*(zn@6o7u974904%tttcdi&o-@od!)u0pf)*6d(&'
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 
 # Application definition
@@ -41,7 +46,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'shortner',
-    'debug_toolbar',
     'corsheaders'
 ]
 
@@ -49,6 +53,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "config.middleware.RateLimitMiddleware",
     'django.middleware.security.SecurityMiddleware',
+    'django.contrib.staticfiles.middleware', 
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -89,15 +94,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # }
 
 
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "urlshortner",
-        "USER": "postgres",
-        "PASSWORD": "AyushSriva@2005",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
+    "default": dj_database_url.config(
+        default=env("DATABASE_URL", default="postgres://postgres:postgres@localhost:5432/urlshortner"),
+        conn_max_age=600,
+    )
 }
 
 
@@ -157,7 +159,7 @@ INTERNAL_IPS = [
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+        "LOCATION": env("REDIS_URL", default="redis://localhost:6379/0"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "SOCKET_CONNECT_TIMEOUT": 5,
@@ -173,4 +175,20 @@ CELERY_BROKER_URL    = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_TASK_ALWAYS_EAGER = False  # Set True only during unit testing
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173"] 
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=["http://localhost:5173", "https://ziply-zeta.vercel.app"],
+)
+
+
+MIDDLEWARE.insert(2, 'whitenoise.middleware.WhiteNoiseMiddleware')  # right after SecurityMiddleware
+
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+
+if DEBUG:
+    INSTALLED_APPS += ['debug_toolbar']
+    MIDDLEWARE.insert(3, 'debug_toolbar.middleware.DebugToolbarMiddleware')

@@ -42,9 +42,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'shortner',
     'debug_toolbar',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "config.middleware.RateLimitMiddleware",
     'django.middleware.security.SecurityMiddleware',
     "debug_toolbar.middleware.DebugToolbarMiddleware",
@@ -170,3 +172,5 @@ CACHES = {
 CELERY_BROKER_URL    = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_TASK_ALWAYS_EAGER = False  # Set True only during unit testing
+
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173"] 
